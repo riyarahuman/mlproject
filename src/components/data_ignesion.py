@@ -1,10 +1,15 @@
 import os
 import sys
-import pandas as pd
 from src.exception import CustomException
 from src.logger import logging
+import pandas as pd
 from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
+
+from src.components.data_transforrmation import DataTransformation
+from src.components.data_transforrmation import DataTransformationConfig
+
+from src.components.model_trainer import ModelTrainer
 
 @dataclass
 class DataIngestionConfig:
@@ -17,40 +22,49 @@ class DataIngestion:
         self.ingestion_config = DataIngestionConfig()
 
     def initiate_data_ingestion(self):
-        logging.info('Entered data ingestion method/component.')
+        logging.info("Entered the data ingestion method or component")
         try:
-            # Read dataset
-            df = pd.read_csv(os.path.join('notebook', 'data', 'stud.csv'))
-            logging.info('Dataset read as DataFrame.')
-            logging.info(f'Dataset shape: {df.shape}')
+            # Replace this with your actual path
+            df = pd.read_csv('notebook/data/stud.csv')  # Ensure path is correct
+            logging.info('Read the dataset as dataframe')
 
-            # Ensure directories exist
+            # Create directories if they do not exist
             os.makedirs(os.path.dirname(self.ingestion_config.train_data_path), exist_ok=True)
-            os.makedirs(os.path.dirname(self.ingestion_config.test_data_path), exist_ok=True)
-            os.makedirs(os.path.dirname(self.ingestion_config.raw_data_path), exist_ok=True)
 
-            # Save raw data
+            # Saving raw data
             df.to_csv(self.ingestion_config.raw_data_path, index=False, header=True)
-            logging.info('Raw dataset saved.')
 
-            # Train-test split
-            logging.info('Train-test split initiated.')
+            logging.info("Train test split initiated")
+            # Perform train-test split (80% train, 20% test)
             train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
 
-            # Save train and test datasets
+            # Save train and test data as separate CSV files
             train_set.to_csv(self.ingestion_config.train_data_path, index=False, header=True)
             test_set.to_csv(self.ingestion_config.test_data_path, index=False, header=True)
 
-            logging.info('Data ingestion is completed.')
+            logging.info("Ingestion of the data is completed")
 
             return (
                 self.ingestion_config.train_data_path,
                 self.ingestion_config.test_data_path
             )
-
         except Exception as e:
             raise CustomException(e, sys)
 
 if __name__ == "__main__":
-    obj = DataIngestion()
-    obj.initiate_data_ingestion()
+    try:
+        # Initialize and perform data ingestion
+        obj = DataIngestion()
+        train_data, test_data = obj.initiate_data_ingestion()
+
+        # Initialize and perform data transformation
+        data_transformation = DataTransformation()
+        train_arr, test_arr, _ = data_transformation.initiate_data_transformation(train_data, test_data)
+
+        # Initialize and train the model
+        model_trainer = ModelTrainer()
+        print(model_trainer.initiate_model_trainer(train_arr, test_arr))
+
+    except Exception as e:
+        logging.error(f"Error occurred during the process: {str(e)}")
+        raise CustomException(e, sys)

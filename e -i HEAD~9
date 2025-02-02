@@ -1,0 +1,29 @@
+[33mcommit 1dd2a487c1091857b2cc3c1a0ad3e0bc49681eaa[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: riya <riyarahuman212@gmail.com>
+Date:   Sun Feb 2 10:46:52 2025 +0530
+
+    Your commit message here
+
+[33mcommit 7c1ebcf660d31797b80dcfbca28b2d93ca13cff0[m
+Author: riya <riyarahuman212@gmail.com>
+Date:   Sat Feb 1 21:54:48 2025 +0530
+
+    Add logger, exception, and pipeline modules
+
+[33mcommit bf5248bcf441d163557f5930fc8cb8eab7c94b3a[m
+Author: riya <riyarahuman212@gmail.com>
+Date:   Fri Jan 31 01:01:15 2025 +0530
+
+    setup
+
+[33mcommit 3b06ef0b5d2502361bc2c22b540d36988cb1f9b3[m
+Author: riyarahuman <161139388+riyarahuman@users.noreply.github.com>
+Date:   Fri Jan 31 00:12:01 2025 +0530
+
+    Create .gitignore
+
+[33mcommit 89ebbc89010ed8b68c662981f7de5b23889b421c[m
+Author: riya <riyarahuman212@gmail.com>
+Date:   Thu Jan 30 23:17:07 2025 +0530
+
+    first commit

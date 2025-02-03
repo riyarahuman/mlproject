@@ -4,12 +4,16 @@ from typing import List
 hyphen_e_dot = '-e .'
 
 def get_requirements(file_path: str) -> List[str]:
+    """Reads the requirements.txt file and returns a list of dependencies."""
     requirements = []
-    with open(file_path) as file_obj:
-        requirements = file_obj.readlines()
-        requirements = [req.replace("\n", "") for req in requirements]
-        if hyphen_e_dot in requirements:
-            requirements.remove(hyphen_e_dot)
+    try:
+        with open(file_path, 'r') as file_obj:
+            requirements = file_obj.readlines()
+            requirements = [req.strip() for req in requirements]
+            if hyphen_e_dot in requirements:
+                requirements.remove(hyphen_e_dot)
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
     return requirements
 
 setup(

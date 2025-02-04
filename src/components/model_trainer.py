@@ -10,7 +10,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
-
 from src.exception import CustomException
 from src.logger import logging
 from src.utils import save_object, evaluate_models
@@ -28,10 +27,15 @@ class ModelTrainer:
     def initiate_model_trainer(self, train_array, test_array):
         try:
             logging.info("Splitting training and test input data")
+            # Splitting data into X (features) and y (target) for training and testing
+            X_train, y_train, X_test, y_test = (
+                train_array[:, :-1],
+                train_array[:, -1],
+                test_array[:, :-1],
+                test_array[:, -1],
+            )
 
-            X_train, y_train = train_array[:, :-1], train_array[:, -1]
-            X_test, y_test = test_array[:, :-1], test_array[:, -1]
-
+            # Defining models
             models = {
                 "Random Forest": RandomForestRegressor(),
                 "Decision Tree": DecisionTreeRegressor(),
@@ -41,45 +45,64 @@ class ModelTrainer:
                 "AdaBoost Regressor": AdaBoostRegressor(),
             }
 
+            # Hyperparameters for grid search
             params = {
-                "Random Forest": {"n_estimators": [50, 100, 200]},
-                "Decision Tree": {"max_depth": [None, 10, 20, 30]},
-                "Gradient Boosting": {"n_estimators": [50, 100], "learning_rate": [0.01, 0.1]},
-                "Linear Regression": {},  # No hyperparameters for Linear Regression
-                "XGBRegressor": {"n_estimators": [50, 100], "learning_rate": [0.01, 0.1]},
-                "AdaBoost Regressor": {"n_estimators": [50, 100], "learning_rate": [0.01, 0.1]},
+                "Decision Tree": {
+                    'criterion': ['squared_error', 'friedman_mse', 'absolute_error', 'poisson'],
+                },
+                "Random Forest": {
+                    'n_estimators': [8, 16, 32, 64, 128, 256]
+                },
+                "Gradient Boosting": {
+                    'learning_rate': [.1, .01, .05, .001],
+                    'subsample': [0.6, 0.7, 0.75, 0.8, 0.85, 0.9],
+                    'n_estimators': [8, 16, 32, 64, 128, 256]
+                },
+                "Linear Regression": {},
+                "XGBRegressor": {
+                    'learning_rate': [.1, .01, .05, .001],
+                    'n_estimators': [8, 16, 32, 64, 128, 256]
+                },
+                "AdaBoost Regressor": {
+                    'learning_rate': [.1, .01, 0.5, .001],
+                    'n_estimators': [8, 16, 32, 64, 128, 256]
+                },
             }
 
-            # Evaluate models
-            model_report = evaluate_models(X_train, y_train, X_test, y_test, models, params)
+            # Evaluating models with grid search and getting best model
+            logging.info("Evaluating models")
+            model_report: dict = evaluate_models(
+                X_train=X_train,
+                y_train=y_train,
+                X_test=X_test,
+                y_test=y_test,
+                models=models,
+                param=params,
+            )
 
-            print("Model Report:", model_report)  # Debugging output
-
-            if not model_report:
-                raise CustomException("Model evaluation returned empty results.")
-
-            best_model_name = max(model_report, key=model_report.get)
-            best_model_score = model_report[best_model_name]
+            # Get best model and its score
+            best_model_score = max(sorted(model_report.values()))
+            best_model_name = list(model_report.keys())[list(model_report.values()).index(best_model_score)]
             best_model = models[best_model_name]
 
-            print(f"Best Model: {best_model_name}, R² Score: {best_model_score}")  # Debugging output
+            logging.info(f"Best Model: {best_model_name} with R² score: {best_model_score:.4f}")
 
+            # If best model score is less than 0.6, raise an exception
             if best_model_score < 0.6:
-                raise CustomException("No suitable model found (R² < 0.6)")
+                raise CustomException("No best model found")
 
-            logging.info(f"Saving best model: {best_model_name}")
-            save_object(self.model_trainer_config.trained_model_file_path, best_model)
+            # Saving the best model
+            logging.info("Saving the best model")
+            save_object(file_path=self.model_trainer_config.trained_model_file_path, obj=best_model)
 
+            # Predicting on test data
             predicted = best_model.predict(X_test)
 
-            print("Actual Y Test:", y_test[:10])  # Debugging output
-            print("Predicted Y:", predicted[:10])  # Debugging output
-
+            # Calculating R² score on test data
             r2_square = r2_score(y_test, predicted)
+            logging.info(f"R² score on test data: {r2_square:.4f}")
 
-            print(f"Final R² Score: {r2_square:.4f}")  # Debugging output
             return r2_square
 
         except Exception as e:
-            logging.error(f"Error in Model Trainer: {e}")
             raise CustomException(e, sys)

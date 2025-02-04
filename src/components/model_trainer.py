@@ -105,4 +105,5 @@ class ModelTrainer:
             return r2_square
 
         except Exception as e:
+            logging.error(f"Error during model training: {str(e)}")
             raise CustomException(e, sys)
